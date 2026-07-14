@@ -1,0 +1,4 @@
+encryptionsalt: v1:01A2cvP4yGE=:v1:tfPiafR9rU8fIPHm:VI4s685f9LxadnHZ5XfiDfTQl7LQ2Q==
+config:
+  guestbook-monitoring:isMinikube: "true"
+  kubernetes:context: kind-guestbook-monitoring

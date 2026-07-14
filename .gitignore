@@ -1,0 +1,5 @@
+node_modules/
+bin/
+*.tsbuildinfo
+Pulumi.*.yaml.bak
+.DS_Store
