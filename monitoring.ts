@@ -2,6 +2,8 @@
 // kube-prometheus-stack Helm chart (Prometheus Operator, Alertmanager, Grafana,
 // node-exporter, kube-state-metrics, and default dashboards).
 
+import * as fs from "fs";
+import * as path from "path";
 import * as k8s from "@pulumi/kubernetes";
 import * as pulumi from "@pulumi/pulumi";
 
@@ -64,6 +66,24 @@ export class Monitoring extends pulumi.ComponentResource {
         // Derive from the release's actual applied name (chart.status.name) rather than
         // assuming the requested name was honored verbatim.
         this.grafanaServiceName = pulumi.interpolate`${this.chart.status.name}-grafana`;
+
+        // Grafana's sidecar (grafana-sc-dashboard, enabled by kube-prometheus-stack)
+        // auto-imports any ConfigMap labeled grafana_dashboard=1 in this namespace.
+        const dashboardJson = fs.readFileSync(
+            path.join(__dirname, "dashboards", "guestbook.json"),
+            "utf8",
+        );
+        new k8s.core.v1.ConfigMap(
+            "guestbook-grafana-dashboard",
+            {
+                metadata: {
+                    namespace,
+                    labels: { grafana_dashboard: "1" },
+                },
+                data: { "guestbook.json": dashboardJson },
+            },
+            { ...parent, dependsOn: [this.chart] },
+        );
 
         this.registerOutputs({});
     }

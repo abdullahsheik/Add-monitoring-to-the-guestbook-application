@@ -76,6 +76,29 @@ instead of port-forwarding.
    dashboard (under Dashboards → Kubernetes) shows CPU/memory usage for the
    `guestbook` namespace's frontend pods, sourced from cAdvisor/kube-state-metrics.
 
+## Known limitations
+
+- The upstream `pulumi/guestbook-php-redis` frontend image has no built-in metrics
+  endpoint, so there's no dedicated `ServiceMonitor` scraping it directly. Its
+  resource usage (CPU/memory) is instead visible via kube-state-metrics and cAdvisor,
+  which kube-prometheus-stack scrapes automatically for every pod in the cluster,
+  including the `guestbook` namespace. Request-rate/error-rate metrics would require
+  instrumenting the PHP app itself (e.g. an nginx/php-fpm exporter sidecar), which is
+  out of scope here since it means modifying the upstream image.
+- Redis leader and replica are fully instrumented via `redis_exporter` sidecars and
+  scraped through their own `ServiceMonitor`s — see the verification steps below.
+
+## Guestbook dashboard (stretch goal)
+
+A custom Grafana dashboard (`dashboards/guestbook.json`) shows:
+- Redis leader/replica `up` status
+- Redis connected clients and commands processed per second
+- Frontend pod CPU/memory usage (from cAdvisor/kube-state-metrics)
+
+It's provisioned automatically on deploy via the `monitoring.ts` Grafana sidecar
+dashboard provider — no manual import needed. Find it in Grafana under
+**Dashboards → Guestbook**.
+
 ## Accessing the guestbook app itself
 
 ```bash
