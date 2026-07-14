@@ -36,6 +36,8 @@ This provisions two namespaces (`guestbook`, `monitoring`), the guestbook app, a
 the monitoring stack. First install of the Helm chart can take a few minutes while
 images pull.
 
+![pulumi up output showing all resources created](screenshots/pulumi-up-output.png)
+
 ## Grafana access
 
 Pulumi outputs the Grafana admin username, a randomly generated password (marked
@@ -70,11 +72,26 @@ instead of port-forwarding.
    ```
 2. Open http://localhost:9090/targets and confirm the `redis-leader` and
    `redis-replica` ServiceMonitor targets show `UP`.
+
+   ![All Prometheus scrape targets healthy](screenshots/prometheus-targets-all.png)
+
+   Filtering to `redis-leader` specifically confirms it's being scraped from the
+   `guestbook` namespace via the `redis-exporter` sidecar:
+
+   ![redis-leader ServiceMonitor target UP with guestbook namespace label](screenshots/prometheus-targets-redis-leader.png)
+
 3. Query `redis_up` or `redis_connected_clients` in the Prometheus expression browser
    to see live values from the guestbook's Redis pods.
-4. In Grafana, the default **Kubernetes / Compute Resources / Namespace (Pods)**
-   dashboard (under Dashboards → Kubernetes) shows CPU/memory usage for the
-   `guestbook` namespace's frontend pods, sourced from cAdvisor/kube-state-metrics.
+
+   ![redis_up query returning 1 for both leader and replica](screenshots/prometheus-query-redis-up.png)
+
+   ![redis_connected_clients query showing live values](screenshots/prometheus-query-redis-connected-clients.png)
+
+4. In Grafana, the default **Kubernetes / Compute Resources / Cluster** dashboard
+   (under Dashboards → Kubernetes) shows CPU/memory usage broken out by namespace,
+   including `guestbook`:
+
+   ![Kubernetes Compute Resources dashboard showing the guestbook namespace](screenshots/grafana-dashboard-compute-resources.png)
 
 ## Known limitations
 
@@ -97,7 +114,13 @@ A custom Grafana dashboard (`dashboards/guestbook.json`) shows:
 
 It's provisioned automatically on deploy via the `monitoring.ts` Grafana sidecar
 dashboard provider — no manual import needed. Find it in Grafana under
-**Dashboards → Guestbook**.
+**Dashboards → Guestbook**, alongside the chart's other default dashboards:
+
+![Grafana dashboards list](screenshots/grafana-dashboards-list.png)
+
+Example of a default Kubernetes networking dashboard, filterable by namespace:
+
+![Kubernetes Networking Namespace dashboard](screenshots/grafana-dashboard-networking.png)
 
 ## Accessing the guestbook app itself
 
